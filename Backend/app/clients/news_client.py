@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from app.config import settings
 from app.clients.base_client import BaseClient
-from app.models.internal_models import NormalizedNews
+from app.models.internal_models import NormalizedNews, NewsEvent
 
 
 class NewsClient(BaseClient):
@@ -16,7 +16,9 @@ class NewsClient(BaseClient):
         "storm",
         "conflict",
         "violence",
-        "disaster"
+        "disaster",
+        "attack",
+        "terror"
     ]
 
     async def get_news_risk(self, city: str):
@@ -27,7 +29,8 @@ class NewsClient(BaseClient):
             "from": from_date,
             "sortBy": "relevancy",
             "apiKey": settings.NEWS_API_KEY,
-            "language": "en"
+            "language": "en",
+            "pageSize": 20
         }
 
         response = await self.client.get(self.BASE_URL, params=params)
@@ -36,19 +39,31 @@ class NewsClient(BaseClient):
 
         articles = data.get("articles", [])
 
-        negative_count = 0
-        keywords_found = set()
+        events = []
 
         for article in articles:
-            content = (article.get("title", "") + " " +
-                       article.get("description", "")).lower()
+            content = (
+                (article.get("title") or "") + " " +
+                (article.get("description") or "")
+            ).lower()
 
             for keyword in self.NEGATIVE_KEYWORDS:
                 if keyword in content:
-                    negative_count += 1
-                    keywords_found.add(keyword)
+                    events.append(
+                        NewsEvent(
+                            title=article.get("title", "No title"),
+                            source=article.get("source", {}).get("name", "Unknown"),
+                            url=article.get("url", ""),
+                            published_at=article.get("publishedAt", ""),
+                            keyword_triggered=keyword
+                        )
+                    )
+                    break  # Avoid double-counting same article
+
+            if len(events) >= 5:
+                break  # Limit evidence size
 
         return NormalizedNews(
-            negative_event_count=negative_count,
-            keywords_found=list(keywords_found)
+            negative_event_count=len(events),
+            events=events
         )

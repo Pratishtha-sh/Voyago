@@ -67,13 +67,19 @@ class ScoringEngine:
             explanations.append("No recent negative news events found.")
         elif count <= 2:
             score = 40
-            explanations.append("Some minor negative news reported recently.")
+            explanations.append("A few concerning news events reported recently.")
         elif count <= 5:
             score = 70
-            explanations.append("Multiple concerning news events reported.")
+            explanations.append("Multiple concerning news events reported recently.")
         else:
             score = 90
             explanations.append("High number of negative news events detected.")
+
+        for event in news.events:
+            explanations.append(
+                f"Reported: '{event.title}' "
+                f"(Source: {event.source}, Keyword: {event.keyword_triggered})"
+            )
 
         return score, explanations
 
@@ -90,10 +96,10 @@ class ScoringEngine:
         news_score, news_exp = self.calculate_news_score(news)
 
         total_score = (
-            weather_score * self.WEATHER_WEIGHT +
-            aqi_score * self.AQI_WEIGHT +
-            holiday_score * self.HOLIDAY_WEIGHT +
-            news_score * self.NEWS_WEIGHT
+            weather_score * self.weights["weather"] +
+            aqi_score * self.weights["aqi"] +
+            holiday_score * self.weights["holiday"] +
+            news_score * self.weights["news"]
         )
 
         total_score = int(total_score)

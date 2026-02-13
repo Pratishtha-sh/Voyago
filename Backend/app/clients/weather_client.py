@@ -1,9 +1,9 @@
-import httpx
 from app.config import settings
+from app.clients.base_client import BaseClient
 from app.models.internal_models import NormalizedWeather
 
 
-class WeatherClient:
+class WeatherClient(BaseClient):
 
     BASE_URL = "https://api.openweathermap.org/data/2.5/forecast"
 
@@ -15,10 +15,9 @@ class WeatherClient:
             "units": "metric"
         }
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(self.BASE_URL, params=params)
-            response.raise_for_status()
-            data = response.json()
+        response = await self.client.get(self.BASE_URL, params=params)
+        response.raise_for_status()
+        data = response.json()
 
         forecast = data["list"][0]
 

@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 from datetime import datetime
-
+from app.db.repository import TravelRepository
 from app.clients.geo_client import GeoClient
 from app.clients.weather_client import WeatherClient
 from app.clients.aqi_client import AQIClient

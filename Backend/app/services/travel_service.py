@@ -19,6 +19,7 @@ class TravelService:
         self.holiday_client = HolidayClient()
         self.news_client = NewsClient()
         self.scoring_engine = ScoringEngine()
+        self.repository = TravelRepository()
 
     async def analyze_travel(self, request):
 
@@ -47,7 +48,8 @@ class TravelService:
             weather,
             aqi,
             holiday,
-            news
+            news,
+            request.travel_date
         )
 
         # 4️⃣ Assemble response
@@ -77,4 +79,7 @@ class TravelService:
             "explanations": risk_result["explanations"]
         }
 
+        # 5️⃣ Save to MongoDB
+        await self.repository.save_report(response)
+    
         return response

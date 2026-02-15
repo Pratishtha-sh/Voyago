@@ -4,12 +4,13 @@ from app.models.internal_models import (
     NormalizedHoliday,
     NormalizedNews
 )
-from app.config import settings
+from app.config import settings, RISK_WEIGHTS
+from datetime import datetime
 
 class ScoringEngine:
 
     def __init__(self):
-        self.weights = settings.RISK_WEIGHTS
+        self.weights = RISK_WEIGHTS
 
     def calculate_weather_score(self, weather: NormalizedWeather):
         explanations = []
@@ -83,24 +84,67 @@ class ScoringEngine:
 
         return score, explanations
 
+    def adjust_news_weight(self, travel_date):
+        # Ensure travel_date is a date object
+        if isinstance(travel_date, str):
+            try:
+                travel_date = datetime.strptime(travel_date, "%Y-%m-%d").date()
+            except ValueError:
+                # Handle cases where format might be different or full datetime string
+                try: 
+                    travel_date = datetime.strptime(travel_date.split()[0], "%Y-%m-%d").date()
+                except:
+                     return self.weights["news"] # Fallback
+        elif isinstance(travel_date, datetime):
+            travel_date = travel_date.date()
+            
+        today = datetime.utcnow().date()
+        days_until_travel = (travel_date - today).days
+
+        base_weight = self.weights["news"]
+
+        if days_until_travel <= 14:
+            multiplier = 1.0
+        elif days_until_travel <= 30:
+            multiplier = 0.75
+        elif days_until_travel <= 60:
+            multiplier = 0.5
+        elif days_until_travel <= 120:
+            multiplier = 0.25
+        else:
+            multiplier = 0.1
+
+        return base_weight * multiplier
+
     def calculate_total_score(
         self,
         weather: NormalizedWeather,
         aqi: NormalizedAQI,
         holiday: NormalizedHoliday,
-        news: NormalizedNews
+        news: NormalizedNews,
+        travel_date
     ):
         weather_score, weather_exp = self.calculate_weather_score(weather)
         aqi_score, aqi_exp = self.calculate_aqi_score(aqi)
         holiday_score, holiday_exp = self.calculate_holiday_score(holiday)
         news_score, news_exp = self.calculate_news_score(news)
 
+        adjusted_news_weight = self.adjust_news_weight(travel_date)
+
+        # Recalculate total weight to normalize
+        total_weight = (
+            self.weights["weather"] +
+            self.weights["aqi"] +
+            self.weights["holiday"] +
+            adjusted_news_weight
+        )
+
         total_score = (
             weather_score * self.weights["weather"] +
             aqi_score * self.weights["aqi"] +
             holiday_score * self.weights["holiday"] +
-            news_score * self.weights["news"]
-        )
+            news_score * adjusted_news_weight
+        ) / total_weight
 
         total_score = int(total_score)
 

@@ -4,7 +4,7 @@ from app.clients.base_client import BaseClient
 
 class GeoClient(BaseClient):
 
-    BASE_URL = "http://api.openweathermap.org/geo/1.0/direct"
+    BASE_URL = "https://api.openweathermap.org/geo/1.0/direct"
 
     async def get_coordinates(self, city: str):
         params = {

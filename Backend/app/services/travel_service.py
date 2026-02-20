@@ -8,7 +8,7 @@ from app.clients.aqi_client import AQIClient
 from app.clients.holiday_client import HolidayClient
 from app.clients.news_client import NewsClient
 from app.services.scoring_engine import ScoringEngine
-
+from app.services.insight_service import InsightService
 
 class TravelService:
 
@@ -20,6 +20,7 @@ class TravelService:
         self.news_client = NewsClient()
         self.scoring_engine = ScoringEngine()
         self.repository = TravelRepository()
+        self.insight_service = InsightService()
 
     async def analyze_travel(self, request):
 
@@ -74,12 +75,18 @@ class TravelService:
             },
             "meta": {
                 "cached": False,
-                "generated_at": datetime.utcnow()
+                "generated_at": datetime.utcnow().isoformat()
             },
             "explanations": risk_result["explanations"]
         }
 
-        # 5️⃣ Save to MongoDB
+        # Save to MongoDB
         await self.repository.save_report(response)
+
+        if "_id" in response:
+            del response["_id"]
+        # 6️⃣ Generate AI insight
+        ai_output = await self.insight_service.generate_ai_insight(response)
+        response["ai_insight"] = ai_output
     
         return response

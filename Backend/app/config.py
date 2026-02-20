@@ -12,7 +12,7 @@ class Settings:
     REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
     API_SECRET_KEY = os.getenv("API_SECRET_KEY")
-
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
 
 settings = Settings()
 

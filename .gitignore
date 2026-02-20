@@ -1,0 +1,58 @@
+# SENSITIVE / SECRET FILES
+.env
+.env.*
+!.env.example
+
+# PYTHON
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# TESTING
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# TOOLING / IDE
+.vscode/
+.idea/
+*.iml
+*.suo
+*.user
+.DS_Store
+Thumbs.db
+
+
+# MYPY / TYPE CHECKING
+
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+
+# TEMP / DEBUG FILES
+reproduce_decay.py
+*.tmp
+*.bak
+
+
+# NODE (if frontend exists)
+node_modules/
+.next/
+.nuxt/
+dist/

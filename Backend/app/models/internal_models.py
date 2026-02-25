@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
+
 
 class NormalizedWeather(BaseModel):
     temperature: float
@@ -10,11 +11,6 @@ class NormalizedWeather(BaseModel):
 class NormalizedAQI(BaseModel):
     aqi: int
     category: str
-
-
-class NormalizedHoliday(BaseModel):
-    is_holiday: bool
-    holiday_name: str | None
 
 
 class NewsEvent(BaseModel):

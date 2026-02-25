@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Request, HTTPException
 from app.models.request_models import TravelAnalyzeRequest
 from app.services.travel_service import TravelService
-from app.db.repository import TravelRepository
+from app.db.repository import TripRepository
 from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/travel", tags=["Travel"])
 
 travel_service = TravelService()
-repository = TravelRepository()
+repository = TripRepository()
 
 
 @router.post("/analyze")
@@ -20,24 +20,24 @@ async def analyze_travel(request: Request, payload: TravelAnalyzeRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/report/{report_id}")
+@router.get("/trip/{report_id}")
 @limiter.limit("10/minute")
-async def get_report(request: Request, report_id: str):
-    report = await repository.get_report(report_id)
+async def get_trip(request: Request, report_id: str):
+    trip = await repository.get_trip(report_id)
 
-    if not report:
-        raise HTTPException(status_code=404, detail="Report not found")
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
 
-    report["_id"] = str(report["_id"])
-    return report
+    trip["_id"] = str(trip["_id"])
+    return trip
 
 
-@router.delete("/report/{report_id}")
+@router.delete("/trip/{report_id}")
 @limiter.limit("10/minute")
-async def delete_report(request: Request, report_id: str):
-    result = await repository.delete_report(report_id)
+async def delete_trip(request: Request, report_id: str):
+    result = await repository.delete_trip(report_id)
 
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Report not found")
+        raise HTTPException(status_code=404, detail="Trip not found")
 
-    return {"message": "Report deleted successfully"}
+    return {"message": "Trip deleted successfully"}
